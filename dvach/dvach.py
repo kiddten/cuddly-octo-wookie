@@ -4,18 +4,19 @@ import utils
 DVACH_URL = 'http://2ch.hk'
 
 
-class Thread:
+class Thread(object):
 
-    def __init__(self, json, board_name):
+    def __init__(self, data, board_name):
         self.board_name = board_name
         self.posts = []
-        self.__parse_json(json)
+        self.__parse_json(data)
         self.__create_urls()
 
-    def __parse_json(self, json):
-        self.files_count = json['files_count']
-        self.posts_count = json['posts_count']
-        self.id = json['thread_num']
+    def __parse_json(self, data):
+        self.files_count = int(data['files_count'])
+        self.posts_count = int(data['posts_count'])
+        self.id = data['thread_num']
+        self.original_post = Post(data['posts'][0])
 
     def __create_urls(self):
         self.url = '{}/{}/res/{}.html'.format(
@@ -23,7 +24,7 @@ class Thread:
         self.url_json = '{}/{}/res/{}.json'.format(
             DVACH_URL, self.board_name, self.id)
 
-    def load(self):
+    def update(self):
         thread_json = utils.load_json(self.url_json)
         self.title = thread_json['threads'][0]['title']
         for post in thread_json['threads'][0]['posts']:
@@ -35,22 +36,23 @@ class Thread:
                     DVACH_URL, self.board_name, post.url_path)
 
 
-class Post:
+class Post(object):
 
-    def __init__(self, json):
+    def __init__(self, data):
         self.files = []
-        self.__parse_json(json)
+        self.__parse_json(data)
 
-    def __parse_json(self, json):
-        self.text = json['comment']
-        for f in json['files']:
+    def __parse_json(self, data):
+        self.message = data['comment']
+        for f in data['files']:
             self.files.append(AttachedFile(f))
 
 
-class AttachedFile:
+class AttachedFile(object):
 
-    def __init__(self, json):
-        self.__parse_json(json)
+    def __init__(self, data):
+        self.url = ''
+        self.__parse_json(data)
 
     def is_picture(self):
         return self.name.endswith('.jpg')
@@ -58,9 +60,9 @@ class AttachedFile:
     def is_webm(self):
         return self.name.endswith('.webm')
 
-    def __parse_json(self, json):
-        self.type = json['type']
-        self.name = json['name']
-        self.size = int(json['size'])
-        self.url_path = json['path']
-        self.url = ''
+    def __parse_json(self, data):
+        self.type = data['type']
+        self.name = data['name']
+        self.size = int(data['size'])
+        self.url_path = data['path']
+
