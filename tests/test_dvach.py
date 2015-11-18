@@ -2,11 +2,12 @@ import unittest
 import sys
 import json
 
-sys.path.append('../')
+sys.path.append('../dvach')
 
 from dvach import Thread
 from dvach import Post
 from dvach import AttachedFile
+from dvach import Page
 
 
 class TestThreadCreation(unittest.TestCase):
@@ -33,6 +34,25 @@ class TestThreadCreation(unittest.TestCase):
         self.assertIsNotNone(self.thread.original_post.message)
         self.assertIsInstance(self.thread.original_post, Post)
         self.assertGreater(len(self.thread.original_post.files), 0)
+
+
+class TestPage(unittest.TestCase):
+
+    def test_index_url_resolving(self):
+        page = Page('b', 0)
+        self.assertEqual(page.url, 'http://2ch.hk/b/index.html')
+        self.assertEqual(page.url_json, 'http://2ch.hk/b/index.json')
+
+    def test_url_resolving(self):
+        page = Page('b', 1)
+        self.assertEqual(page.url, 'http://2ch.hk/b/1.html')
+        self.assertEqual(page.url_json, 'http://2ch.hk/b/1.json')
+
+    def test_threads_creation(self):
+        page = Page('b', 2)
+        self.assertGreater(len(page.threads), 0)
+        self.assertIsInstance(page.threads[0], Thread)
+        self.assertNotEqual(page.threads[0].id, page.threads[1].id)
 
 
 class TestAttachedFile(unittest.TestCase):
