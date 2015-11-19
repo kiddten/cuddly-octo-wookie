@@ -4,9 +4,11 @@ DVACH_URL = 'http://2ch.hk'
 
 
 class Page(object):
+
     """
     Represents a board's page. It has a list of threads presented on the page.
-    By default threads will not be fully loaded 
+
+    By default threads will not be fully loaded
     and will have only 3 posts from the head.
     """
 
@@ -31,10 +33,13 @@ class Page(object):
 
 
 class Thread(object):
+
     """
-    Represents a 2ch.hk thread. If initialization is done by JSON then 
-    thread may not contain all required fileds (depends on JSON data).
-    If initialize by thread's number then ALL the essential stuff will be gathered.
+    Represents a 2ch.hk thread. 
+
+    If initialization is done by JSON then thread may not contain
+    all required fileds (depends on JSON data).
+    If initialize by thread's number then all stuff will be gathered.
     """
 
     def __init__(self, board_name, data=None, thread_num=None):
@@ -44,6 +49,9 @@ class Thread(object):
         self.posts = []
         self._url = None
         self._json_url = None
+        self.title = None
+        self.posts_count = None
+        self.files_count = None
 
         if data and not thread_num:
             self._init_by_json(data)
@@ -62,7 +70,7 @@ class Thread(object):
         self._parse_json(thread_json)
 
     def _parse_json(self, data):
-        "Gets required fields from JSON and inits fields of the class."
+        """Get required fields from JSON and inits fields of the class."""
         self.files_count = int(data['files_count'])
         self.posts_count = int(data['posts_count'])
         if not self.num:
@@ -75,7 +83,7 @@ class Thread(object):
             # invoked by _init_by_num
             self.original_post = Post(data['threads'][0]['posts'][0])
 
-    def format_url(self, fmt):
+    def _format_url(self, fmt):
         """Return string representation of url."""
         return '{}/{}/res/{}.{}'.format(
             DVACH_URL, self.board_name, self.num, fmt)
@@ -84,18 +92,18 @@ class Thread(object):
     def url(self):
         """Property which represents url of board page."""
         if not self._url:
-            self._url = self.format_url('html')
+            self._url = self._format_url('html')
         return self._url
 
     @property
     def json_url(self):
         """Property which represents url of json page."""
         if not self._json_url:
-            self._json_url = self.format_url('json')
+            self._json_url = self._format_url('json')
         return self._json_url
 
     def update(self):
-        "Updates thread's content to the latest data."
+        """Update thread's content to the latest data."""
         if not utils.ping(self.json_url):
             raise Exception('Can not access %s' % self.json_url)
         thread_json = utils.load_json(self.json_url)
@@ -106,7 +114,7 @@ class Thread(object):
         return thread_json
 
     def _update_files_ulrs(self):
-        "Creates absolute links of files"
+        """Create absolute links of files."""
         for post in self.posts:
             for attachment in post.files:
                 attachment.url = '{}/{}/{}'.format(
@@ -121,8 +129,8 @@ class Post(object):
 
     def _parse_json(self, data):
         self.message = data['comment']
-        for f in data['files']:
-            self.files.append(AttachedFile(f))
+        for attachment in data['files']:
+            self.files.append(AttachedFile(attachment))
 
 
 class AttachedFile(object):
