@@ -20,12 +20,12 @@ class TestThreadCreation(unittest.TestCase):
         cls.board = 'b'
         cls.thread = Thread(cls.board, data)
         cls.url = 'http://2ch.hk/b/res/107239337.html'
-        cls.url_json = 'http://2ch.hk/b/res/107239337.json'
+        cls.json_url = 'http://2ch.hk/b/res/107239337.json'
         cls.num = '107239337'
 
     def test_urls_creating(self):
         self.assertEqual(self.thread.url, self.url)
-        self.assertEqual(self.thread.url_json, self.url_json)
+        self.assertEqual(self.thread.json_url, self.json_url)
 
     def test_json_parsing(self):
         self.assertEqual(self.thread.board_name, self.board)
@@ -67,12 +67,12 @@ class TestPage(unittest.TestCase):
     def test_index_url_resolving(self):
         page = Page('b', 0)
         self.assertEqual(page.url, 'http://2ch.hk/b/index.html')
-        self.assertEqual(page.url_json, 'http://2ch.hk/b/index.json')
+        self.assertEqual(page.json_url, 'http://2ch.hk/b/index.json')
 
     def test_url_resolving(self):
         page = Page('b', 1)
         self.assertEqual(page.url, 'http://2ch.hk/b/1.html')
-        self.assertEqual(page.url_json, 'http://2ch.hk/b/1.json')
+        self.assertEqual(page.json_url, 'http://2ch.hk/b/1.json')
 
     def test_threads_creation(self):
         page = Page('b', 2)

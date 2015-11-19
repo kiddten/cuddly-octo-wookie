@@ -21,11 +21,11 @@ class Page(object):
         index = 'index' if (self.index == 0) else str(self.index)
         self.url = '{}/{}/{}.html'.format(
             DVACH_URL, self.board_name, index)
-        self.url_json = '{}/{}/{}.json'.format(
+        self.json_url = '{}/{}/{}.json'.format(
             DVACH_URL, self.board_name, index)
 
     def _create_threads(self):
-        page_json = utils.load_json(self.url_json)
+        page_json = utils.load_json(self.json_url)
         for thread in page_json['threads']:
             self.threads.append(Thread(self.board_name, thread))
 
@@ -43,7 +43,7 @@ class Thread(object):
         self.original_post = None
         self.posts = []
         self._url = None
-        self.json_url = None
+        self._json_url = None
 
         if data and not thread_num:
             self._init_by_json(data)
@@ -88,17 +88,17 @@ class Thread(object):
         return self._url
 
     @property
-    def jurl(self):
+    def json_url(self):
         """Property which represents url of json page."""
-        if not self.json_url:
-            self.json_url = self.format_url('json')
-        return self.json_url
+        if not self._json_url:
+            self._json_url = self.format_url('json')
+        return self._json_url
 
     def update(self):
         "Updates thread's content to the latest data."
-        if not utils.ping(self.jurl):
-            raise Exception('Can not access %s' % self.jurl)
-        thread_json = utils.load_json(self.jurl)
+        if not utils.ping(self.json_url):
+            raise Exception('Can not access %s' % self.json_url)
+        thread_json = utils.load_json(self.json_url)
         self.title = thread_json['title']
         for post in thread_json['threads'][0]['posts']:
             self.posts.append(Post(post))
