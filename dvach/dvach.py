@@ -42,6 +42,8 @@ class Thread(object):
         self.num = thread_num
         self.original_post = None
         self.posts = []
+        self._url = None
+        self.json_url = None
 
         if data and not thread_num:
             self._init_by_json(data)
@@ -52,17 +54,15 @@ class Thread(object):
 
     def _init_by_json(self, data):
         self._parse_json(data)
-        self._create_urls()
         self._update_files_ulrs()
 
     def _init_by_num(self, thread_num):
         self.num = str(thread_num)
-        self._create_urls()
         thread_json = self.update()
         self._parse_json(thread_json)
 
     def _parse_json(self, data):
-        "Gets required fields from JSON and inits fields of the class"
+        "Gets required fields from JSON and inits fields of the class."
         self.files_count = int(data['files_count'])
         self.posts_count = int(data['posts_count'])
         if not self.num:
@@ -75,17 +75,30 @@ class Thread(object):
             # invoked by _init_by_num
             self.original_post = Post(data['threads'][0]['posts'][0])
 
-    def _create_urls(self):
-        self.url = '{}/{}/res/{}.html'.format(
-            DVACH_URL, self.board_name, self.num)
-        self.url_json = '{}/{}/res/{}.json'.format(
-            DVACH_URL, self.board_name, self.num)
+    def format_url(self, fmt):
+        """Return string representation of url."""
+        return '{}/{}/res/{}.{}'.format(
+            DVACH_URL, self.board_name, self.num, fmt)
+
+    @property
+    def url(self):
+        """Property which represents url of board page."""
+        if not self._url:
+            self._url = self.format_url('html')
+        return self._url
+
+    @property
+    def jurl(self):
+        """Property which represents url of json page."""
+        if not self.json_url:
+            self.json_url = self.format_url('json')
+        return self.json_url
 
     def update(self):
         "Updates thread's content to the latest data."
-        if not utils.ping(self.url_json):
-            raise Exception('Can not access %s' % self.url_json)
-        thread_json = utils.load_json(self.url_json)
+        if not utils.ping(self.jurl):
+            raise Exception('Can not access %s' % self.jurl)
+        thread_json = utils.load_json(self.jurl)
         self.title = thread_json['title']
         for post in thread_json['threads'][0]['posts']:
             self.posts.append(Post(post))
