@@ -8,6 +8,7 @@ from dvach import Thread
 from dvach import Post
 from dvach import AttachedFile
 from dvach import Page
+import utils
 
 
 class TestThreadCreation(unittest.TestCase):
@@ -17,10 +18,10 @@ class TestThreadCreation(unittest.TestCase):
         with open('data/thread.json', 'r') as j:
             data = json.loads(j.read())
         cls.board = 'b'
-        cls.thread = Thread(data, cls.board)
+        cls.thread = Thread(cls.board, data)
         cls.url = 'http://2ch.hk/b/res/107239337.html'
         cls.url_json = 'http://2ch.hk/b/res/107239337.json'
-        cls.id = '107239337'
+        cls.num = '107239337'
 
     def test_urls_creating(self):
         self.assertEqual(self.thread.url, self.url)
@@ -30,10 +31,35 @@ class TestThreadCreation(unittest.TestCase):
         self.assertEqual(self.thread.board_name, self.board)
         self.assertGreater(self.thread.posts_count, 0)
         self.assertGreater(self.thread.files_count, 0)
-        self.assertEqual(self.thread.id, self.id)
+        self.assertEqual(self.thread.num, self.num)
         self.assertIsNotNone(self.thread.original_post.message)
         self.assertIsInstance(self.thread.original_post, Post)
         self.assertGreater(len(self.thread.original_post.files), 0)
+
+
+class TestsWithRealData(unittest.TestCase):
+
+    def setUp(self):
+        self.board_name = 'b'
+        self.page = Page(self.board_name, 1)
+        self.first_thread = self.page.threads[0]
+
+    def test_create_by_num(self):
+        thread_num = self.first_thread.num
+        new_thread = Thread(self.board_name, thread_num=thread_num)
+        self.assertEqual(thread_num, new_thread.num)
+        self.assertEqual(new_thread.original_post.message,
+                         self.first_thread.original_post.message)
+
+    def test_file_is_accessible(self):
+        picture_url = self.first_thread.posts[0].files[0].url
+        self.assertTrue(utils.ping(picture_url))
+
+    def check_update_thread(self):
+        n = len(self.first_thread.posts)
+        self.first_thread.update()
+        self.assertGreater(len(self.first_thread.posts), n)
+        self.assertGreater(len(self.first_thread.title), 0)
 
 
 class TestPage(unittest.TestCase):
@@ -52,7 +78,7 @@ class TestPage(unittest.TestCase):
         page = Page('b', 2)
         self.assertGreater(len(page.threads), 0)
         self.assertIsInstance(page.threads[0], Thread)
-        self.assertNotEqual(page.threads[0].id, page.threads[1].id)
+        self.assertNotEqual(page.threads[0].num, page.threads[1].num)
 
 
 class TestAttachedFile(unittest.TestCase):
