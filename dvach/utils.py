@@ -17,6 +17,7 @@ def load_json(url, proxies=None):
         logging.debug('Proxies: %s', '; '.join(proxies.values()))
     return json.loads(requests.get(url, proxies=proxies).content)
 
+
 def ping(url):
     try:
         response = requests.get(url)
@@ -24,11 +25,13 @@ def ping(url):
     except ConnectionError:
         return False
 
+
 def load_proxies(filename):
     with open(filename, 'r') as proxy_file:
         proxies = proxy_file.readlines()
         if len(proxies) != 2:
-            raise Exception('File with proxies shoud contain http and https proxy')
+            raise Exception(
+                'File with proxies shoud contain http and https proxy')
         else:
             return {
                 'http': proxies[0].strip(),
