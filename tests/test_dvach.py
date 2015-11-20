@@ -1,21 +1,15 @@
-import unittest
-import sys
 import json
+import sys
+import unittest
 
-sys.path.append('../dvach')
-
-from dvach import Thread
-from dvach import Post
-from dvach import AttachedFile
-from dvach import Page
-import utils
-
+from dvach import utils
+from dvach.dvach import AttachedFile, Page, Post, Thread
 
 class TestThreadCreation(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open('data/thread.json', 'r') as j:
+        with open('tests/data/thread.json', 'r') as j:
             data = json.loads(j.read())
         cls.board = 'b'
         cls.thread = Thread(cls.board, data)
@@ -85,7 +79,7 @@ class TestAttachedFile(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open('data/jpg.json', 'r') as j:
+        with open('tests/data/jpg.json', 'r') as j:
             data = json.loads(j.read())
         cls.file = AttachedFile(data)
         cls.name = '14477975927530.jpg'
@@ -103,9 +97,9 @@ class TestPost(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        with open('data/post.json', 'r') as j:
+        with open('tests/data/post.json', 'r') as j:
             data_post = json.loads(j.read())
-        with open('data/post_no_files.json', 'r') as j:
+        with open('tests/data/post_no_files.json', 'r') as j:
             data_post_no_files = json.loads(j.read())
         cls.post = Post(data_post)
         cls.post_no_files = Post(data_post_no_files)

@@ -1,4 +1,4 @@
-import utils
+from . import utils
 
 DVACH_URL = 'http://2ch.hk'
 
@@ -13,23 +13,41 @@ class Page(object):
     """
 
     def __init__(self, board_name, index):
-        self.threads = []
+        self._threads = []
         self.board_name = board_name
         self.index = index
-        self._create_urls()
-        self._create_threads()
+        self._url = None
+        self._json_url = None
 
-    def _create_urls(self):
+    def _format_url(self, fmt):
+        """Return string representation of url."""
         index = 'index' if (self.index == 0) else str(self.index)
-        self.url = '{}/{}/{}.html'.format(
-            DVACH_URL, self.board_name, index)
-        self.json_url = '{}/{}/{}.json'.format(
-            DVACH_URL, self.board_name, index)
+        return '{}/{}/{}.{}'.format(
+            DVACH_URL, self.board_name, index, fmt)
 
-    def _create_threads(self):
-        page_json = utils.load_json(self.json_url)
-        for thread in page_json['threads']:
-            self.threads.append(Thread(self.board_name, thread))
+    @property
+    def url(self):
+        """Property which represents url of board page."""
+        if not self._url:
+            self._url = self._format_url('html')
+        return self._url
+
+    @property
+    def json_url(self):
+        """Property which represents url of json page."""
+        if not self._json_url:
+            self._json_url = self._format_url('json')
+        return self._json_url
+
+    @property
+    def threads(self):
+        """Property which represents list of board threads."""
+        if not self._threads:
+            page_json = utils.load_json(self.json_url)
+            self._threads = [Thread(self.board_name, thread)
+                             for thread in page_json['threads']]
+        return self._threads
+
 
 
 class Thread(object):
