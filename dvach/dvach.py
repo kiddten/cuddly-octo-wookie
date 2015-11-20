@@ -49,11 +49,10 @@ class Page(object):
         return self._threads
 
 
-
 class Thread(object):
 
     """
-    Represents a 2ch.hk thread. 
+    Represents a 2ch.hk thread.
 
     If initialization is done by JSON then thread may not contain
     all required fileds (depends on JSON data).
