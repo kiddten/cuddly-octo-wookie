@@ -1,4 +1,4 @@
-from . import utils
+from chan import utils
 
 DVACH_URL = 'http://2ch.hk'
 

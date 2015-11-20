@@ -2,8 +2,8 @@ import json
 import sys
 import unittest
 
-from dvach import utils
-from dvach.dvach import AttachedFile, Page, Post, Thread
+from chan import utils
+from chan.api import AttachedFile, Page, Post, Thread
 
 class TestThreadCreation(unittest.TestCase):
 
