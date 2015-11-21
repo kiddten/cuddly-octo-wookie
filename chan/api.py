@@ -120,7 +120,7 @@ class Thread(object):
         for post in self.posts:
             for attachment in post.files:
                 attachment.url = '{}/{}/{}'.format(
-                    DVACH_URL, self.board_name, attachment.url_path)
+                    DVACH_URL, self.board_name, attachment.url)
 
     def update(self):
         """Update thread's content to the latest data."""
@@ -130,7 +130,7 @@ class Thread(object):
         self.files_count = int(thread_json['files_count'])
         self.posts_count = int(thread_json['posts_count'])
 
-        posts_length = len(self.posts) - 1 # OP is omitted
+        posts_length = len(self.posts) - 1  # OP is omitted
         gap = self.posts_count - posts_length
         if gap:
             missed_posts = thread_json['threads'][0]['posts'][-gap:]
@@ -149,29 +149,24 @@ class Thread(object):
 class Post(object):
 
     def __init__(self, data):
-        self.files = []
+        self.files = None
         self._parse_json(data)
 
     def _parse_json(self, data):
         self.message = data['comment']
-        for attachment in data['files']:
-            self.files.append(AttachedFile(attachment))
+        self.files = [AttachedFile(attachment) for attachment in data['files']]
 
 
 class AttachedFile(object):
 
     def __init__(self, data):
-        self.url = ''
-        self._parse_json(data)
+        self.name = data.get('name')
+        self.size = int(data.get('size'))
+        self.type = data.get('type')
+        self.url = data.get('path')
 
     def is_picture(self):
         return self.name.endswith('.jpg')
 
     def is_webm(self):
         return self.name.endswith('.webm')
-
-    def _parse_json(self, data):
-        self.type = data['type']
-        self.name = data['name']
-        self.size = int(data['size'])
-        self.url_path = data['path']
