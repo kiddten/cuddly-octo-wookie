@@ -15,8 +15,7 @@ def load_json(url, proxies=None):
     logging.debug('Loading: %s', url)
     if proxies:
         logging.debug('Proxies: %s', '; '.join(proxies.values()))
-    data = requests.get(url, proxies=proxies).content
-    return json.loads(data.decode('latin-1').encode('utf-8'))
+    return json.loads(requests.get(url, proxies=proxies).text)
 
 
 def ping(url, proxies=None):
