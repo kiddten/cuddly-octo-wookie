@@ -36,25 +36,49 @@ class TestsWithRealData(unittest.TestCase):
 
     def setUp(self):
         self.board_name = 'b'
-        self.page = Page(self.board_name, 1)
+        self.page = Page(self.board_name, 0)
         self.first_thread = self.page.threads[0]
 
     def test_create_by_num(self):
         thread_num = self.first_thread.num
-        new_thread = Thread(self.board_name, thread_num=thread_num)
+        new_thread = Thread(self.board_name, num=thread_num)
         self.assertEqual(thread_num, new_thread.num)
         self.assertEqual(new_thread.original_post.message,
                          self.first_thread.original_post.message)
+        self.assertEqual(len(new_thread.posts) - 1, new_thread.posts_count)
 
     def test_file_is_accessible(self):
-        picture_url = self.first_thread.posts[0].files[0].url
-        self.assertTrue(utils.ping(picture_url))
+        pictures = self.first_thread.get_pictures()
+        self.assertTrue(utils.ping(pictures[0].url))
+        thread = Thread(self.board_name, num=self.first_thread.num)
+        pictures = self.first_thread.get_pictures()
+        self.assertTrue(utils.ping(pictures[0].url))
 
-    def check_update_thread(self):
+    def test_update_thread(self):
         n = len(self.first_thread.posts)
         self.first_thread.update()
         self.assertGreater(len(self.first_thread.posts), n)
         self.assertGreater(len(self.first_thread.title), 0)
+        n = len(self.first_thread.posts)
+        self.assertEqual(self.first_thread.posts_count, n - 1)
+
+    def test_update_not_duplicates(self):
+        self.first_thread.update()
+        len_before = len(self.first_thread.posts)
+        self.first_thread.update()
+        len_after = len(self.first_thread.posts)
+        self.assertLess(len_after - len_before, 5)
+        self.assertEqual(len(self.first_thread.posts) - 1,
+                         self.first_thread.posts_count)
+
+    def test_get_pictures(self):
+        pictures = self.first_thread.get_pictures()
+        if self.first_thread.files_count > 10:
+            self.assertGreater(len(pictures), 0)
+        for pic in pictures:
+            self.assertTrue(pic.is_picture())
+        urls = [pic.url for pic in pictures]
+        self.assertEqual(len(set(urls)), len(urls))
 
 
 class TestPage(unittest.TestCase):

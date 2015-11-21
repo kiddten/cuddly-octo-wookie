@@ -54,51 +54,47 @@ class Thread(object):
     """
     Represents a 2ch.hk thread.
 
-    If initialization is done by JSON then thread may not contain
-    all required fileds (depends on JSON data).
-    If initialize by thread's number then all stuff will be gathered.
+    If initialization is done by JSON then thread has only original post.
+    Initialization by thread's number gathers all the data.
     """
 
-    def __init__(self, board_name, data=None, thread_num=None):
+    def __init__(self, board_name, data=None, num=None):
         self.board_name = board_name
-        self.num = thread_num
+        self.num = None
         self.original_post = None
-        self.posts = []
+        self.posts = None
         self._url = None
         self._json_url = None
         self.title = None
         self.posts_count = None
         self.files_count = None
 
-        if data and not thread_num:
-            self._init_by_json(data)
-        elif thread_num and not data:
-            self._init_by_num(thread_num)
-        else:
+        if num:
+            # initialization by thread number
+            self.num = str(num)
+            data = utils.load_json(self.json_url)
+        elif not data:
+            # no data, no num
             raise Exception('Invalid set of initial arguments')
-
-    def _init_by_json(self, data):
         self._parse_json(data)
         self._update_files_ulrs()
-
-    def _init_by_num(self, thread_num):
-        self.num = str(thread_num)
-        thread_json = self.update()
-        self._parse_json(thread_json)
 
     def _parse_json(self, data):
         """Get required fields from JSON and inits fields of the class."""
         self.files_count = int(data['files_count'])
         self.posts_count = int(data['posts_count'])
+
         if not self.num:
-            # invoked by _init_by_json
             self.num = data['thread_num']
-            for post in data['posts']:
-                self.posts.append(Post(post))
-            self.original_post = self.posts[0]
+        if data.get('posts'):
+            # data is json of a page
+            self.posts = [Post(data['posts'][0])]
         else:
-            # invoked by _init_by_num
-            self.original_post = Post(data['threads'][0]['posts'][0])
+            # data is json of the thread
+            self.posts = [Post(post_data)
+                          for post_data in data['threads'][0]['posts']]
+
+        self.original_post = self.posts[0]
 
     def _format_url(self, fmt):
         """Return string representation of url."""
@@ -119,23 +115,35 @@ class Thread(object):
             self._json_url = self._format_url('json')
         return self._json_url
 
-    def update(self):
-        """Update thread's content to the latest data."""
-        if not utils.ping(self.json_url):
-            raise Exception('Can not access %s' % self.json_url)
-        thread_json = utils.load_json(self.json_url)
-        self.title = thread_json['title']
-        for post in thread_json['threads'][0]['posts']:
-            self.posts.append(Post(post))
-        self._update_files_ulrs()
-        return thread_json
-
     def _update_files_ulrs(self):
         """Create absolute links of files."""
         for post in self.posts:
             for attachment in post.files:
                 attachment.url = '{}/{}/{}'.format(
                     DVACH_URL, self.board_name, attachment.url_path)
+
+    def update(self):
+        """Update thread's content to the latest data."""
+
+        thread_json = utils.load_json(self.json_url)
+        self.title = thread_json['title']
+        self.files_count = int(thread_json['files_count'])
+        self.posts_count = int(thread_json['posts_count'])
+
+        posts_length = len(self.posts) - 1 # OP is omitted
+        gap = self.posts_count - posts_length
+        if gap:
+            missed_posts = thread_json['threads'][0]['posts'][-gap:]
+            self.posts += [Post(data) for data in missed_posts]
+        self._update_files_ulrs()
+
+    def get_pictures(self):
+        return [attachment for post in self.posts for
+                attachment in post.files if attachment.is_picture()]
+
+    def get_webms(self):
+        return [attachment for post in self.posts for
+                attachment in post.files if attachment.is_webm()]
 
 
 class Post(object):
