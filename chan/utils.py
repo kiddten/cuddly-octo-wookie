@@ -18,9 +18,11 @@ def load_json(url, proxies=None):
     return json.loads(requests.get(url, proxies=proxies).content)
 
 
-def ping(url):
+def ping(url, proxies=None):
+    if not proxies and os.path.isfile(PROXY_FILE):
+        proxies = load_proxies(PROXY_FILE)
     try:
-        response = requests.get(url)
+        response = requests.get(url, proxies=proxies)
         return response.status_code == 200
     except ConnectionError:
         return False
