@@ -5,6 +5,7 @@ import unittest
 from chan import utils
 from chan.api import AttachedFile, Page, Post, Thread
 
+
 class TestThreadCreation(unittest.TestCase):
 
     @classmethod
