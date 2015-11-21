@@ -4,6 +4,7 @@ import unittest
 
 from chan import utils
 from chan.api import AttachedFile, Page, Post, Thread
+from chan.api import get_preview
 
 
 class TestThreadCreation(unittest.TestCase):
@@ -134,6 +135,14 @@ class TestPost(unittest.TestCase):
         self.assertGreater(len(self.post.files), 0)
         self.assertIsInstance(self.post.files[0], AttachedFile)
         self.assertEqual(len(self.post_no_files.files), 0)
+
+class TestModuleFunctions(unittest.TestCase):
+
+    def test_get_preview(self):
+        board = get_preview('wrk')
+        self.assertGreater(len(board.keys()), 0)
+        thread = Thread('wrk', num=board.keys()[0])
+        self.assertEqual(thread.num, board.keys()[0])
 
 
 if __name__ == '__main__':

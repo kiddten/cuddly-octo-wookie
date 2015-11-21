@@ -138,10 +138,18 @@ class Thread(object):
         self._update_files_ulrs()
 
     def get_pictures(self):
+        """
+        Return list of AttachedFile objects of
+        all pictures in thread.
+        """
         return [attachment for post in self.posts for
                 attachment in post.files if attachment.is_picture()]
 
     def get_webms(self):
+        """
+        Return list of AttachedFile objects of
+        all wemb files in the thread.
+        """
         return [attachment for post in self.posts for
                 attachment in post.files if attachment.is_webm()]
 
@@ -166,7 +174,22 @@ class AttachedFile(object):
         self.url = data.get('path')
 
     def is_picture(self):
-        return self.name.endswith('.jpg')
+        return self.name.endswith(('.jpg', '.png'))
 
     def is_webm(self):
         return self.name.endswith('.webm')
+
+
+def get_preview(board):
+    """
+    Return a dictionary which represents light version of thread.
+
+    Keys in result dictionary are thread numbers.
+    Values are titles of original posts.
+    """
+    # TODO: check if board is valid
+    url = '{}/{}/threads.json'.format(DVACH_URL, board)
+    data = utils.load_json(url)
+    return {
+        thread['num']: thread['subject'] for thread in data['threads']
+    }
