@@ -79,20 +79,27 @@ class Thread(object):
         self._parse_json(data)
         self._update_files_ulrs()
 
+    def __repr__(self):
+        return 'Thread /{}/#{}'.format(self.board_name, self.num)
+
     def _parse_json(self, data):
         """Get required fields from JSON and inits fields of the class."""
-        self.files_count = int(data['files_count'])
-        self.posts_count = int(data['posts_count'])
+        self.files_count = int(data.get('files_count'))
+        self.posts_count = int(data.get('posts_count'))
 
-        if not self.num:
-            self.num = data['thread_num']
+        # understanding by unique keys what kind of json we are dealing with
         if data.get('posts'):
-            # data is json of a page
-            self.posts = [Post(data['posts'][0])]
+            # dealing with thread's data from page.json
+            self.num = data.get('thread_num')
+            self.posts = [Post(data.get('posts')[0])]
+        elif data.get('num'):
+            # dealing with thread's data from catalog.json
+            self.num = data.get('num')
+            self.posts = [Post(data)]
         else:
-            # data is json of the thread
+            # dealing with thread.json
             self.posts = [Post(post_data)
-                          for post_data in data['threads'][0]['posts']]
+                          for post_data in data.get('threads')[0]['posts']]
 
         self.original_post = self.posts[0]
 
@@ -140,8 +147,7 @@ class Thread(object):
     @property
     def pictures(self):
         """
-        Property which represents list of AttachedFile objects of
-        all pictures in thread.
+        Return list of AttachedFile objects of all pictures in the thread.
         """
         return [attachment for post in self.posts for
                 attachment in post.files if attachment.is_picture()]
@@ -149,8 +155,7 @@ class Thread(object):
     @property
     def webms(self):
         """
-        Property which represents list of AttachedFile objects of
-        all wemb files in the thread.
+        Return list of AttachedFile objects of all wemb files in the thread.
         """
         return [attachment for post in self.posts for
                 attachment in post.files if attachment.is_webm()]
@@ -158,18 +163,30 @@ class Thread(object):
 
 class Post(object):
 
+    """
+    Represents a single post in the thread.
+    """
+
     def __init__(self, data):
         self.message = data.get('comment')
-        self.files = [AttachedFile(attachment) for attachment in data['files']]
+        self.files = [AttachedFile(attachment)
+                      for attachment in data.get('files')]
 
 
 class AttachedFile(object):
+
+    """
+    Represents a file related to post.
+    """
 
     def __init__(self, data):
         self.name = data.get('name')
         self.size = int(data.get('size'))
         self.type = data.get('type')
         self.url = data.get('path')
+
+    def __repr__(self):
+        return 'File {}'.format(self.name)
 
     def is_picture(self):
         return self.name.endswith(('.jpg', '.png'))
@@ -180,7 +197,7 @@ class AttachedFile(object):
 
 def get_preview(board):
     """
-    Return a dictionary which represents light version of thread.
+    Return a dictionary which represents light version of threads.
 
     Keys in result dictionary are thread numbers.
     Values are titles of original posts.
@@ -189,5 +206,17 @@ def get_preview(board):
     url = '{}/{}/threads.json'.format(DVACH_URL, board)
     data = utils.load_json(url)
     return {
-        thread['num']: thread['subject'] for thread in data['threads']
+        thread['num']: thread['subject'] for thread in data.get('threads')
     }
+
+def get_all_threads(board):
+    """
+    Return a list of Thread objects gathered from board.
+
+    The list consists of all threads from board.
+    Each element from this list has only original post.
+    """
+    # TODO: check if board is valid
+    url = '{}/{}/catalog.json'.format(DVACH_URL, board)
+    data = utils.load_json(url)
+    return [Thread(board, thread_data) for thread_data in data.get('threads')]
