@@ -49,10 +49,10 @@ class TestsWithRealData(unittest.TestCase):
         self.assertEqual(len(new_thread.posts) - 1, new_thread.posts_count)
 
     def test_file_is_accessible(self):
-        pictures = self.first_thread.get_pictures()
+        pictures = self.first_thread.pictures
         self.assertTrue(utils.ping(pictures[0].url))
         thread = Thread(self.board_name, num=self.first_thread.num)
-        pictures = self.first_thread.get_pictures()
+        pictures = self.first_thread.pictures
         self.assertTrue(utils.ping(pictures[0].url))
 
     def test_update_thread(self):
@@ -73,7 +73,7 @@ class TestsWithRealData(unittest.TestCase):
                          self.first_thread.posts_count)
 
     def test_get_pictures(self):
-        pictures = self.first_thread.get_pictures()
+        pictures = self.first_thread.pictures
         if self.first_thread.files_count > 10:
             self.assertGreater(len(pictures), 0)
         for pic in pictures:
