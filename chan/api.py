@@ -137,17 +137,19 @@ class Thread(object):
             self.posts += [Post(data) for data in missed_posts]
         self._update_files_ulrs()
 
-    def get_pictures(self):
+    @property
+    def pictures(self):
         """
-        Return list of AttachedFile objects of
+        Property which represents list of AttachedFile objects of
         all pictures in thread.
         """
         return [attachment for post in self.posts for
                 attachment in post.files if attachment.is_picture()]
 
-    def get_webms(self):
+    @property
+    def webms(self):
         """
-        Return list of AttachedFile objects of
+        Property which represents list of AttachedFile objects of
         all wemb files in the thread.
         """
         return [attachment for post in self.posts for
@@ -157,11 +159,7 @@ class Thread(object):
 class Post(object):
 
     def __init__(self, data):
-        self.files = None
-        self._parse_json(data)
-
-    def _parse_json(self, data):
-        self.message = data['comment']
+        self.message = data.get('comment')
         self.files = [AttachedFile(attachment) for attachment in data['files']]
 
 
