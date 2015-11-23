@@ -1,3 +1,4 @@
+import itertools
 from chan import utils
 
 DVACH_URL = 'http://2ch.hk'
@@ -24,6 +25,9 @@ class Page(object):
         index = 'index' if (self.index == 0) else str(self.index)
         return '{}/{}/{}.{}'.format(
             DVACH_URL, self.board_name, index, fmt)
+
+    def __getitem__(self, index):
+        return self.threads[index]
 
     @property
     def url(self):
@@ -125,7 +129,7 @@ class Thread(object):
     def _update_files_ulrs(self):
         """Create absolute links of files."""
         for post in self.posts:
-            for attachment in post.files:
+            for attachment in post.attachments:
                 attachment.url = '{}/{}/{}'.format(
                     DVACH_URL, self.board_name, attachment.url)
 
@@ -144,21 +148,24 @@ class Thread(object):
             self.posts += [Post(data) for data in missed_posts]
         self._update_files_ulrs()
 
+    def __getitem__(self, index):
+        return self.posts[index]
+
     @property
     def pictures(self):
         """
         Return list of AttachedFile objects of all pictures in the thread.
         """
-        return [attachment for post in self.posts for
-                attachment in post.files if attachment.is_picture()]
+        return list(itertools.chain.from_iterable(
+            post.pictures for post in self.posts))
 
     @property
     def webms(self):
         """
         Return list of AttachedFile objects of all wemb files in the thread.
         """
-        return [attachment for post in self.posts for
-                attachment in post.files if attachment.is_webm()]
+        return list(itertools.chain.from_iterable(
+            post.webms for post in self.posts))
 
 
 class Post(object):
@@ -169,8 +176,28 @@ class Post(object):
 
     def __init__(self, data):
         self.message = data.get('comment')
-        self.files = [AttachedFile(attachment)
-                      for attachment in data.get('files')]
+        self._attachments = [AttachedFile(attachment)
+                             for attachment in data.get('files')]
+        self._pictures = None
+        self._webms = None
+
+    @property
+    def attachments(self):
+        return self._attachments
+
+    @property
+    def pictures(self):
+        if not self._pictures:
+            self._pictures = [attachment for attachment in self._attachments
+                              if attachment.is_picture()]
+        return self._pictures
+
+    @property
+    def webms(self):
+        if not self._webms:
+            self._webms = [attachment for attachment in self._attachments
+                           if attachment.is_webm()]
+        return self._webms
 
 
 class AttachedFile(object):
@@ -208,6 +235,7 @@ def get_preview(board):
     return {
         thread['num']: thread['subject'] for thread in data.get('threads')
     }
+
 
 def get_all_threads(board):
     """
