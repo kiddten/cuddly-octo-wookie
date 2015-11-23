@@ -176,26 +176,22 @@ class Post(object):
 
     def __init__(self, data):
         self.message = data.get('comment')
-        self._attachments = [AttachedFile(attachment)
-                             for attachment in data.get('files')]
+        self.attachments = [AttachedFile(attachment)
+                            for attachment in data.get('files')]
         self._pictures = None
         self._webms = None
 
     @property
-    def attachments(self):
-        return self._attachments
-
-    @property
     def pictures(self):
         if not self._pictures:
-            self._pictures = [attachment for attachment in self._attachments
+            self._pictures = [attachment for attachment in self.attachments
                               if attachment.is_picture()]
         return self._pictures
 
     @property
     def webms(self):
         if not self._webms:
-            self._webms = [attachment for attachment in self._attachments
+            self._webms = [attachment for attachment in self.attachments
                            if attachment.is_webm()]
         return self._webms
 
