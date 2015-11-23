@@ -30,7 +30,7 @@ class TestThreadCreation(unittest.TestCase):
         self.assertEqual(self.thread.num, self.num)
         self.assertIsNotNone(self.thread.original_post.message)
         self.assertIsInstance(self.thread.original_post, Post)
-        self.assertGreater(len(self.thread.original_post.files), 0)
+        self.assertGreater(len(self.thread.original_post.attachments), 0)
 
 
 class TestsWithRealData(unittest.TestCase):
@@ -132,9 +132,9 @@ class TestPost(unittest.TestCase):
 
     def test_json_parsing(self):
         self.assertGreater(len(self.post_no_files.message), 10)
-        self.assertGreater(len(self.post.files), 0)
-        self.assertIsInstance(self.post.files[0], AttachedFile)
-        self.assertEqual(len(self.post_no_files.files), 0)
+        self.assertGreater(len(self.post.attachments), 0)
+        self.assertIsInstance(self.post.attachments[0], AttachedFile)
+        self.assertEqual(len(self.post_no_files.attachments), 0)
 
 class TestModuleFunctions(unittest.TestCase):
 
@@ -149,7 +149,7 @@ class TestModuleFunctions(unittest.TestCase):
         self.assertGreater(len(board), 0)
         thread = Thread('wrk', num=board[0].num)
         self.assertEqual(thread.num, board[0].num)
-        self.assertIsNotNone(board[0].original_post.files)
+        self.assertIsNotNone(board[0].original_post.attachments)
 
 
 if __name__ == '__main__':
