@@ -178,7 +178,7 @@ class Post(object):
         self.thread = thread
         self.message = data.get('comment')
         self.num = str(data.get('num'))
-        self._url = '{}#{}'.format(thread.url, self.num)
+        self.url = '{}#{}'.format(thread.url, self.num)
         self.attachments = [AttachedFile(self, attachment)
                             for attachment in data.get('files')]
         self._pictures = None
@@ -200,10 +200,6 @@ class Post(object):
             self._webms = [attachment for attachment in self.attachments
                            if attachment.is_webm()]
         return self._webms
-
-    @property
-    def url(self):
-        return self._url
 
 
 class AttachedFile(object):
