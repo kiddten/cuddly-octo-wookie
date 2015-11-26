@@ -216,7 +216,7 @@ class AttachedFile(object):
         self.name = data.get('name')
         self.size = int(data.get('size'))
         self.type = data.get('type')
-        self._url = '{}/{}/{}'.format(
+        self.url = '{}/{}/{}'.format(
             DVACH_URL, post.thread.board_name, data.get('path'))
 
     def __repr__(self):
@@ -227,10 +227,6 @@ class AttachedFile(object):
 
     def is_webm(self):
         return self.name.endswith('.webm')
-
-    @property
-    def url(self):
-        return self._url
 
 
 def get_preview(board):
