@@ -29,6 +29,12 @@ class Page(object):
     def __getitem__(self, index):
         return self.threads[index]
 
+    def __len__(self):
+        return len(self.threads)
+
+    def __repr__(self):
+        return 'Page /{}/{}'.format(self.board_name, self.index)
+
     @property
     def url(self):
         """Property which represents url of board page."""
@@ -81,7 +87,9 @@ class Thread(object):
             # no data, no num
             raise Exception('Invalid set of initial arguments')
         self._parse_json(data)
-        self._update_files_ulrs()
+
+    def __len__(self):
+        return len(self.posts)
 
     def __repr__(self):
         return 'Thread /{}/#{}'.format(self.board_name, self.num)
@@ -94,15 +102,15 @@ class Thread(object):
         # understanding by unique keys what kind of json we are dealing with
         if data.get('posts'):
             # dealing with thread's data from page.json
-            self.num = data.get('thread_num')
-            self.posts = [Post(data.get('posts')[0])]
+            self.num = str(data.get('thread_num'))
+            self.posts = [Post(self, data.get('posts')[0])]
         elif data.get('num'):
             # dealing with thread's data from catalog.json
-            self.num = data.get('num')
-            self.posts = [Post(data)]
+            self.num = str(data.get('num'))
+            self.posts = [Post(self, data)]
         else:
             # dealing with thread.json
-            self.posts = [Post(post_data)
+            self.posts = [Post(self, post_data)
                           for post_data in data.get('threads')[0]['posts']]
 
         self.original_post = self.posts[0]
@@ -126,13 +134,6 @@ class Thread(object):
             self._json_url = self._format_url('json')
         return self._json_url
 
-    def _update_files_ulrs(self):
-        """Create absolute links of files."""
-        for post in self.posts:
-            for attachment in post.attachments:
-                attachment.url = '{}/{}/{}'.format(
-                    DVACH_URL, self.board_name, attachment.url)
-
     def update(self):
         """Update thread's content to the latest data."""
 
@@ -141,12 +142,11 @@ class Thread(object):
         self.files_count = int(thread_json['files_count'])
         self.posts_count = int(thread_json['posts_count'])
 
-        posts_length = len(self.posts) - 1  # OP is omitted
+        posts_length = len(self) - 1  # OP is omitted
         gap = self.posts_count - posts_length
         if gap:
             missed_posts = thread_json['threads'][0]['posts'][-gap:]
-            self.posts += [Post(data) for data in missed_posts]
-        self._update_files_ulrs()
+            self.posts += [Post(self, data) for data in missed_posts]
 
     def __getitem__(self, index):
         return self.posts[index]
@@ -174,12 +174,18 @@ class Post(object):
     Represents a single post in the thread.
     """
 
-    def __init__(self, data):
+    def __init__(self, thread, data):
+        self.thread = thread
         self.message = data.get('comment')
-        self.attachments = [AttachedFile(attachment)
+        self.num = str(data.get('num'))
+        self._url = '{}#{}'.format(thread.url, self.num)
+        self.attachments = [AttachedFile(self, attachment)
                             for attachment in data.get('files')]
         self._pictures = None
         self._webms = None
+
+    def __repr__(self):
+        return 'Post /{}/#{}'.format(self.thread.num, self.num)
 
     @property
     def pictures(self):
@@ -195,6 +201,10 @@ class Post(object):
                            if attachment.is_webm()]
         return self._webms
 
+    @property
+    def url(self):
+        return self._url
+
 
 class AttachedFile(object):
 
@@ -202,11 +212,12 @@ class AttachedFile(object):
     Represents a file related to post.
     """
 
-    def __init__(self, data):
+    def __init__(self, post, data):
         self.name = data.get('name')
         self.size = int(data.get('size'))
         self.type = data.get('type')
-        self.url = data.get('path')
+        self._url = '{}/{}/{}'.format(
+            DVACH_URL, post.thread.board_name, data.get('path'))
 
     def __repr__(self):
         return 'File {}'.format(self.name)
@@ -216,6 +227,10 @@ class AttachedFile(object):
 
     def is_webm(self):
         return self.name.endswith('.webm')
+
+    @property
+    def url(self):
+        return self._url
 
 
 def get_preview(board):

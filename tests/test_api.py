@@ -38,7 +38,7 @@ class TestsWithRealData(unittest.TestCase):
     def setUp(self):
         self.board_name = 'b'
         self.page = Page(self.board_name, 0)
-        self.first_thread = self.page.threads[0]
+        self.first_thread = self.page[0]
 
     def test_create_by_num(self):
         thread_num = self.first_thread.num
@@ -46,30 +46,29 @@ class TestsWithRealData(unittest.TestCase):
         self.assertEqual(thread_num, new_thread.num)
         self.assertEqual(new_thread.original_post.message,
                          self.first_thread.original_post.message)
-        self.assertEqual(len(new_thread.posts) - 1, new_thread.posts_count)
+        self.assertEqual(len(new_thread) - 1, new_thread.posts_count)
 
     def test_file_is_accessible(self):
         pictures = self.first_thread.pictures
         self.assertTrue(utils.ping(pictures[0].url))
         thread = Thread(self.board_name, num=self.first_thread.num)
-        pictures = self.first_thread.pictures
+        pictures = thread.pictures
         self.assertTrue(utils.ping(pictures[0].url))
 
     def test_update_thread(self):
-        n = len(self.first_thread.posts)
+        n = len(self.first_thread)
         self.first_thread.update()
-        self.assertGreater(len(self.first_thread.posts), n)
-        self.assertGreater(len(self.first_thread.title), 0)
-        n = len(self.first_thread.posts)
+        self.assertGreater(len(self.first_thread), n)
+        n = len(self.first_thread)
         self.assertEqual(self.first_thread.posts_count, n - 1)
 
     def test_update_not_duplicates(self):
         self.first_thread.update()
-        len_before = len(self.first_thread.posts)
+        len_before = len(self.first_thread)
         self.first_thread.update()
-        len_after = len(self.first_thread.posts)
+        len_after = len(self.first_thread)
         self.assertLess(len_after - len_before, 5)
-        self.assertEqual(len(self.first_thread.posts) - 1,
+        self.assertEqual(len(self.first_thread) - 1,
                          self.first_thread.posts_count)
 
     def test_get_pictures(self):
@@ -96,45 +95,14 @@ class TestPage(unittest.TestCase):
 
     def test_threads_creation(self):
         page = Page('b', 2)
-        self.assertGreater(len(page.threads), 0)
-        self.assertIsInstance(page.threads[0], Thread)
-        self.assertNotEqual(page.threads[0].num, page.threads[1].num)
+        self.assertGreater(len(page), 0)
+        self.assertIsInstance(page[0], Thread)
+        self.assertNotEqual(page[0].num, page[1].num)
 
 
-class TestAttachedFile(unittest.TestCase):
+# TODO rewrite test for post and attachment
+# as part of test for thread
 
-    @classmethod
-    def setUpClass(cls):
-        with open('tests/data/jpg.json', 'r') as j:
-            data = json.loads(j.read())
-        cls.file = AttachedFile(data)
-        cls.name = '14477975927530.jpg'
-
-    def test_json_parsing(self):
-        self.assertEqual(self.file.name, self.name)
-        self.assertGreater(self.file.size, 0)
-
-    def test_is_picture(self):
-        self.assertTrue(self.file.is_picture())
-        self.assertFalse(self.file.is_webm())
-
-
-class TestPost(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        with open('tests/data/post.json', 'r') as j:
-            data_post = json.loads(j.read())
-        with open('tests/data/post_no_files.json', 'r') as j:
-            data_post_no_files = json.loads(j.read())
-        cls.post = Post(data_post)
-        cls.post_no_files = Post(data_post_no_files)
-
-    def test_json_parsing(self):
-        self.assertGreater(len(self.post_no_files.message), 10)
-        self.assertGreater(len(self.post.attachments), 0)
-        self.assertIsInstance(self.post.attachments[0], AttachedFile)
-        self.assertEqual(len(self.post_no_files.attachments), 0)
 
 class TestModuleFunctions(unittest.TestCase):
 
