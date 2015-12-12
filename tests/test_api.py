@@ -1,10 +1,9 @@
 import json
-import sys
 import unittest
 
-from chan import utils
-from chan.api import AttachedFile, Page, Post, Thread
-from chan.api import get_preview, get_all_threads
+from abu import utils
+from abu.api import AttachedFile, Page, Post, Thread
+from abu.api import get_preview, get_all_threads
 
 
 class TestThreadCreation(unittest.TestCase):

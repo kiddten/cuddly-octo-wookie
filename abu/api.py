@@ -1,5 +1,5 @@
 import itertools
-from chan import utils
+from abu import utils
 
 DVACH_URL = 'http://2ch.hk'
 
