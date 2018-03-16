@@ -212,7 +212,7 @@ class AttachedFile(object):
         self.name = data.get('name')
         self.size = int(data.get('size'))
         self.type = data.get('type')
-        self.url = '{}{}'.format(DVACH_URL, data.get('path'))
+        self.url = '{}/{}'.format(DVACH_URL, data.get('path'))
 
     def __repr__(self):
         return 'File {}'.format(self.name)
